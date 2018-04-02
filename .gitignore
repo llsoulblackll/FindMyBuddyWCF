@@ -12,6 +12,8 @@
 # Project specific
 Uploads/*
 !Uploads/.gitkeep
+Upload/*
+!Upload/.gitkeep
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
