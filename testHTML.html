@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Type" content="text/html">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>TestHTML</title>
+</head>
+<body>
+	<div>
+		
+		<form id="uploadForm" method="POST">
+			<label>Upload File</label>
+			<input id="inFile" type="file">
+			<br>
+			<input type="submit">
+		</form>
+		<!--FOR MARGIN AUTO TO WORK THE OBJECT MUST BE BLOCK DISPLAYED-->
+		<!--<img style="max-width: 100px; margin: auto; display: block" alt="Not found" src="C:\Users\AdrianValdez\Pictures\Screenshots\Captura de pantalla (1).png">-->
+	</div>
+	<script type="text/javascript">
+		const HTTP_METHOD = {
+			GET: 'GET',
+			POST: 'POST',
+			PUT: 'PUT',
+			DELETE: 'DELETE'
+		};
+		
+		const HTTP_ERROR_PREFIX = '4';
+		const HTTP_OK_PREFIX = '2';
+		
+		const URL = 'http://localhost:60602/';
+		const ENDPOINT = 'PetService.svc/';
+		
+		function makeRequest(method, url, callback, responseType = undefined, data = undefined){
+			
+			const xhr = new XMLHttpRequest();
+			xhr.open(method, url);
+			
+			xhr.setRequestHeader('Content-Type', 'application/json');
+			
+			if(responseType)
+				xhr.responseType = responseType;
+				
+			/*xhr.onload = function(){
+				callback(xhr.response);
+			};*/
+			
+			xhr.onreadystatechange = function(){
+				if(xhr.readyState === xhr.DONE){
+					if(xhr.status.toString().substring(0, 1) === HTTP_OK_PREFIX){
+						callback(xhr.response);
+					} else if(xhr.status.toString().substring(0, 1) === HTTP_ERROR_PREFIX) {
+						console.log(`${xhr.status} ${xhr.statusText}`);
+						console.log(xhr.response);
+					}
+				}
+			}
+			
+			xhr.onerror = function(){
+				console.log(xhr.response);
+			};
+			
+			try{
+				if(data){
+					if(typeof data === 'string')
+						xhr.send(data);
+					else if(typeof data === 'object'){
+						let json = JSON.stringify(data);
+						console.log(json);
+						xhr.send(json);
+					}
+				}
+				else
+					xhr.send();
+			} catch(e){
+				console.log(e);
+				console.log(xhr.response);
+			}
+		}
+		
+		window.onload = function(){
+			makeRequest(HTTP_METHOD.GET, URL + ENDPOINT + 'FindAllPets', function(res){
+				console.log(res);
+			}, 'json');
+			
+			document.querySelector('#uploadForm').onsubmit = function(){
+				let file = this.querySelector('input[type="file"]').files[0];
+				let fileReader = new FileReader();
+				fileReader.readAsDataURL(file);
+				fileReader.onload = function(){
+					let base64img = fileReader.result.substring(fileReader.result.indexOf(',') + 1, fileReader.length);
+					let obj = { ImageBase64: base64img, ImageExtension: file.name.split('.')[1], Id: 0, Name: 'Doggo', Age: 3, Description: 'Some doggo', ImagePath: '', LostLat: 32.2, LostLon: 332.1, Race: 'Siberian', Size: 'Enormous' };
+					console.log(fileReader.result);
+					console.log(base64img);
+					console.log(obj.ImageExtension);
+					makeRequest(HTTP_METHOD.POST, URL + ENDPOINT + 'NewPet', function(res){
+						console.log(res);
+					}, undefined, obj);
+				};
+				return false;
+			};
+		};
+	</script>
+</body>
+</html>
